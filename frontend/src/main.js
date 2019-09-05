@@ -24,8 +24,14 @@ Vue.use(Snotify, {
 Vue.prototype.$api = api;
 
 const store = new Vuex.Store({
-    state: {},
-    mutations: {}
+    state: {
+        lang: 'ru',
+    },
+    mutations: {
+        change_lang(state, lang) {
+            state.lang = lang;
+        }
+    }
 });
 
 const router = new VueRouter({
