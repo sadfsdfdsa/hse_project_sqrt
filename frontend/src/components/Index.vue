@@ -1,27 +1,32 @@
 <template>
-    <div id="main">
-        <b-container>
-            <b-row><h5>Sqrt</h5></b-row>
-            <b-row>
+    <div id="main" class="vertical-center">
+        <b-container class="text-center">
+            <!--<b-row align-h="center"><h3>Sqrt</h3></b-row>-->
+            <!-- Input form -->
+            <b-row align-h="center">
                 <b-col sm="3">
-                    <b-form-input v-model="text" :placeholder="dict.enter_number[lang]"></b-form-input>
-                </b-col>
-                <b-col sm="3">
-                    <b-button variant="success" @click="out">{{dict.result_button[lang]}}</b-button>
-                </b-col>
-            </b-row>
-            <b-row class="mb-3">
-                <b-col sm="3">
-                    <b-form-input :placeholder="output" disabled>{{dict.result[lang]}}: {{
-                        output }}
-                    </b-form-input>
+                    <b-form-input class="text-center" size="lg" v-model="text"
+                                  :placeholder="dict.enter_number[lang]"></b-form-input>
                 </b-col>
             </b-row>
+            <!-- Output form -->
+            <b-row align-h="center">
+                <b-col sm="3">
+                    <p class="form-control form-control-lg" :placeholder="dict.result[lang]" readonly>
+                        {{ output }}
+                    </p>
+                </b-col>
+            </b-row>
+            <!-- Result button -->
+            <b-row align-h="center">
+                <b-col sm="3">
+                    <b-button size="lg" variant="success" @click="out">{{dict.result_button[lang]}}</b-button>
+                </b-col>
+            </b-row>
+            <!-- Divider line -->
             <b-row class="dropdown-divider"></b-row>
-            <b-row class="mt-3">
-                <b-col sm="3">
-                    <b-button variant="info" @click="do_tests">{{dict.run_tests[lang]}}</b-button>
-                </b-col>
+            <!-- Contact modal frame button -->
+            <b-row align-h="center" class="mt-3">
                 <b-col sm="3">
                     <b-button v-b-modal.modal_frame variant="secondary">
                         <b-row>
@@ -38,15 +43,10 @@
                     </b-modal>
                 </b-col>
             </b-row>
-            <div v-if="passed">
-                <b-row><label><h5>{{dict.done_tests[lang]}}</h5></label></b-row>
-                <b-progress class="mt-2" :max="tests.length" show-value>
-                    <b-progress-bar :value="passed" variant="success"></b-progress-bar>
-                    <b-progress-bar :value="tests.length-passed" variant="danger"></b-progress-bar>
-                </b-progress>
-                <b-table hover :items="tests"></b-table>
-                <b-row>{{dict.comment_for_tests[lang]}}</b-row>
-            </div>
+            <!-- Version row -->
+            <b-row>
+                <b-col sm="1"><p class="font-weight-light">1.0 stable</p></b-col>
+            </b-row>
         </b-container>
     </div>
 </template>
@@ -57,69 +57,33 @@
     export default {
         data() {
             return {
-                passed: NaN,
-                text: '',
-                output: '',
+                text: '', // input
+                output: '', // output var
                 dict: {
                     result_button: {ru: 'Вычислить корень', en: 'Get square root'},
                     select_language: {ru: 'Выберите язык', en: 'Select language'},
-                    enter_number: {ru: 'Введите положительное число', en: 'Enter a real number'},
+                    enter_number: {ru: 'Введите число', en: 'Enter a number'},
                     result: {ru: 'Ответ', en: 'Result'},
-                    run_tests: {ru: 'Запустить тесты!', en: 'Run tests!'},
                     do_correct_input: {
-                        ru: 'Введите положительное число',
-                        en: 'Input correct real number'
-                    },
-                    done_tests: {ru: 'Завершенные тесты:', en: 'Completed tests:'},
-                    comment_for_tests: {
-                        ru: 'Последние два теста включают в себя пустые строки с 1 и множественными пробелами.',
-                        en: 'Last 2 tests included 1 and more spaces in empty strings.'
+                        ru: 'Введите число',
+                        en: 'Input a number'
                     },
                     find_error: {ru: 'Нашли ошибку?', en: 'Find error?'},
                     find_error_sub: {ru: 'Свяжитесь с нами', en: 'Contact us'},
                     modal_form_title: {ru: 'Обратная связь', en: 'Contact form'}
-                },
-                options: [
-                    {text: 'Ru', value: 'ru'},
-                    {text: 'En', value: 'en'},
-                ],
-                tests: [
-                    {input: 4, output: NaN, correct: 2, _rowVariant: 'danger'},
-                    {input: 1, output: NaN, correct: 1, _rowVariant: 'danger'},
-                    {input: 0, output: NaN, correct: 0, _rowVariant: 'danger'},
-                    {input: -4, output: NaN, correct: 'error', _rowVariant: 'danger'},
-                    {input: 'string example', output: NaN, correct: 'error', _rowVariant: 'danger'},
-                    {input: '', output: NaN, correct: 'error', _rowVariant: 'danger'},
-                    {input: '   ', output: NaN, correct: 'error', _rowVariant: 'danger'},
-                    {input: 'example error test!', output: NaN, correct: 'incorrect example!', _rowVariant: 'danger'},
-                ],
+                }, // dict for en and ru langs
             }
         },
         methods: {
             out() {
                 let tmp = this.sqrt_func(this.text);
                 if (tmp !== 'error') {
+                    // print result
                     this.output = tmp.toString();
                 } else {
+                    // tmp === 'error'
+                    // print error message
                     this.output = this.dict.do_correct_input[this.lang]
-                }
-            },
-            do_tests() {
-                if (!this.passed) {
-                    let tested_func = this.sqrt_func;
-                    let passed = 0;
-                    this.tests.forEach(function (item) {
-                        item.output = tested_func(item.input);
-                        if (item.correct === item.output) {
-                            passed += 1;
-                            item._rowVariant = 'success';
-                        } else {
-                            item._rowVariant = 'danger';
-                        }
-                    });
-                    this.passed = passed;
-                } else {
-                    this.passed = NaN;
                 }
             },
             sqrt_func(number) {
@@ -131,15 +95,25 @@
                 if (number == 0) {
                     return 0;
                 }
+                // валидация отрицательных чисел;
+                if (number < 0) {
+                    return Math.sqrt(Math.abs(number)) + 'i'
+                }
+                // валидация положительных чисел;
                 return Math.sqrt(number) || 'error';
             },
         },
         computed: mapState([
-            'lang'
+            'lang' // detecting global VueX variable LANG from Navigation
         ])
     }
 </script>
 
 <style>
-
+    .vertical-center {
+        min-height: 70%;
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+    }
 </style>
