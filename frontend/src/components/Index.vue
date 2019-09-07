@@ -1,7 +1,7 @@
 <template>
     <div id="main" class="vertical-center">
         <b-container class="text-center">
-            <!--<b-row align-h="center"><h3>Sqrt</h3></b-row>-->
+            <b-row align-h="center"><h5>{{dict.user_guide[lang]}}</h5></b-row>
             <!-- Input form -->
             <b-row align-h="center">
                 <b-col sm="3">
@@ -38,8 +38,15 @@
                             </b-col>
                         </b-row>
                     </b-button>
-                    <b-modal id="modal_frame" :title="dict.modal_form_title[lang]">
-                        <p class="my-4">Here email form or something like that</p>
+                    <b-modal id="modal_frame" :title="dict.modal_form_title[lang]" @ok="handle_ok">
+                        <b-row>
+                            <b-col class="text-center"><p class="my-4">{{dict.modal_from_text[lang]}}</p></b-col>
+                        </b-row>
+                        <b-row align-h="center">
+                            <b-col sm="12">
+                                <b-form-textarea id="textarea-default" v-model="send_error"></b-form-textarea>
+                            </b-col>
+                        </b-row>
                     </b-modal>
                 </b-col>
             </b-row>
@@ -59,19 +66,64 @@
             return {
                 text: '', // input
                 output: '', // output var
+                send_error: '',
+                // dict for langs
                 dict: {
-                    result_button: {ru: 'Вычислить корень', en: 'Get square root'},
-                    select_language: {ru: 'Выберите язык', en: 'Select language'},
-                    enter_number: {ru: 'Введите число', en: 'Enter a number'},
-                    result: {ru: 'Ответ', en: 'Result'},
+                    user_guide: {
+                        ru: 'юзер гайд',
+                        en: 'user guide',
+                        es: 'guía del usuario',
+                        ch: '用户指南'
+                    },
+                    result_button: {
+                        ru: 'Вычислить корень',
+                        en: 'Get square root',
+                        es: 'Calcular raíz',
+                        ch: '得到平方根'
+                    },
+                    enter_number: {
+                        ru: 'Введите число',
+                        en: 'Enter a number',
+                        es: 'Ingrese un número',
+                        ch: '输入号码'
+                    },
+                    result: {
+                        ru: 'Ответ',
+                        en: 'Result',
+                        es: 'La respuesta',
+                        ch: '结果'
+                    },
                     do_correct_input: {
                         ru: 'Введите число',
-                        en: 'Input a number'
+                        en: 'Input a number',
+                        es: 'Ingrese un número',
+                        ch: '输入号码'
                     },
-                    find_error: {ru: 'Нашли ошибку?', en: 'Find error?'},
-                    find_error_sub: {ru: 'Свяжитесь с нами', en: 'Contact us'},
-                    modal_form_title: {ru: 'Обратная связь', en: 'Contact form'}
-                }, // dict for en and ru langs
+                    find_error: {
+                        ru: 'Нашли ошибку?',
+                        en: 'Find error?',
+                        es: '¿Encontró un error?',
+                        ch: '发现错误？'
+                    },
+                    find_error_sub: {
+                        ru: 'Свяжитесь с нами',
+                        en: 'Contact us',
+                        es: 'Contáctenos',
+                        ch: '联系我们'
+                    },
+                    modal_form_title: {
+                        ru: 'Обратная связь',
+                        en: 'Contact form',
+                        es: 'Formulario de contacto',
+                        ch: '联系表'
+                    },
+                    modal_from_text: {
+                        ru: 'текст',
+                        en: 'text',
+                        es: 'text es',
+                        ch: '文本'
+                    }
+                },
             }
         },
         methods: {
@@ -86,10 +138,32 @@
                     this.output = this.dict.do_correct_input[this.lang]
                 }
             },
+            handle_ok() {
+                this.$api.post("/error", {text: this.send_error})
+                    .then(({data}) => {
+                        this.$snotify.success('Complete!')
+                    })
+                    .catch(e => {
+                        this.$snotify.error(`Error status ${e.response.status}`);
+                    });
+                this.send_error = '';
+            },
             sqrt_func(number) {
                 // валидация пустых строк;
                 if (/^ *$/.test(number)) {
                     return 'error';
+                }
+                // валидация sin cos tg ctg;
+                if (number.startsWith('cos') || number.startsWith('sin') ||
+                    number.startsWith('tg') || number.startsWith('ctg')
+                ) {
+                    // переопределение дефолтных функций для tg и ctg;
+                    Math.tg = Math.tan;
+                    Math.ctg = function (value) {
+                        return 1 / Math.tan(value)
+                    };
+                    // парсинг и нахождение числового значения тригонометрических параметров;
+                    number = Math[number.match(/^(cos|sin|tg|ctg)/g)[0]](number.match(/[-]{0,1}[\d]*[\.]{0,1}[\d]+/g)[0]);
                 }
                 // валидация 0;
                 if (number == 0) {
@@ -97,12 +171,13 @@
                 }
                 // валидация отрицательных чисел;
                 if (number < 0) {
-                    return Math.sqrt(Math.abs(number)) + 'i'
+                    return '±' + Math.sqrt(Math.abs(number)) + 'i' || 'error';
                 }
                 // валидация положительных чисел;
-                return Math.sqrt(number) || 'error';
+                return '±' + Math.sqrt(number) || 'error';
             },
-        },
+        }
+        ,
         computed: mapState([
             'lang' // detecting global VueX variable LANG from Navigation
         ])

@@ -6,7 +6,6 @@
             </b-navbar-brand>
             <nav class="my-2 my-md-0 mr-md-3">
                 <b-row>
-                    <b-link :to="{name: 'indexPage'}" class="p-2 text-dark">Home</b-link>
                     <b-form-radio-group
                             id="btn-radios-2"
                             v-model="lang"
@@ -31,8 +30,8 @@
                 options: [
                     {text: 'Ru', value: 'ru'},
                     {text: 'En', value: 'en'},
-                    // {text: 'Es', value: 'es'},
-                    // {text: 'Ch', value: 'ch'},
+                    {text: 'Es', value: 'es'},
+                    {text: '中国', value: 'ch'},
                 ],
             }
         },
