@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, render_template, request
+import datetime
 
 app = Flask(__name__,
             static_url_path='',
@@ -23,7 +24,9 @@ def page_not_found(e):
 # API
 @app.route('/api/v1/error', methods=['POST'])
 def frontend_post_errors():
-    errors.append(request.json)
+    if len(errors) >= 1000:
+        del errors[0]
+    errors.append([request.json, datetime.today().strftime('%Y-%m-%d-%H:%M:%S')])
     return jsonify(result='success')
 
 

@@ -1,7 +1,8 @@
 <template>
     <div id="main" class="vertical-center">
         <b-container class="text-center">
-            <b-row align-h="center"><h5>{{dict.user_guide[lang]}}</h5></b-row>
+            <b-row align-h="center"><h5>{{dict.user_guide_h[lang]}}</h5></b-row>
+            <b-row align-h="center"><p>{{dict.user_guide[lang]}}</p></b-row>
             <!-- Input form -->
             <b-row align-h="center">
                 <b-col sm="3">
@@ -9,7 +10,7 @@
                                   :placeholder="dict.enter_number[lang]"></b-form-input>
                 </b-col>
             </b-row>
-            <!-- Output form -->
+            <!-- Output place -->
             <b-row align-h="center">
                 <b-col sm="3">
                     <p class="form-control form-control-lg" :placeholder="dict.result[lang]" readonly>
@@ -39,7 +40,7 @@
                         </b-row>
                     </b-button>
                     <b-modal id="modal_frame" :title="dict.modal_form_title[lang]" @ok="handle_ok">
-                        <b-row>
+                        <b-row class="h-50">
                             <b-col class="text-center"><p class="my-4">{{dict.modal_from_text[lang]}}</p></b-col>
                         </b-row>
                         <b-row align-h="center">
@@ -67,13 +68,19 @@
                 text: '', // input
                 output: '', // output var
                 send_error: '',
-                // dict for langs
+                // dict for translate to Russian. English, Spanish, Chinese
                 dict: {
+                    user_guide_h: {
+                        ru: 'Вычисление квадратного корня',
+                        en: 'Square root calculation',
+                        es: 'Cálculo de raíz cuadrada',
+                        ch: '平方根计算'
+                    },
                     user_guide: {
-                        ru: 'юзер гайд',
-                        en: 'user guide',
-                        es: 'guía del usuario',
-                        ch: '用户指南'
+                        ru: 'Введите значение от -10^309 до 10^309 или тригонометрическую функцию с радианами: cos(1), например.',
+                        en: 'Enter a value from -10 ^ 309 to 10 ^ 309 or a trigonometric function with radians, for example: cos (1).',
+                        es: 'Ingrese un valor de -10 ^ 309 a 10 ^ 309 o una función trigonométrica con radianes, por ejemplo: cos (1).',
+                        ch: '输入-10 ^ 309到10 ^ 309的值或带弧度的三角函数，例如：cos（1）。'
                     },
                     result_button: {
                         ru: 'Вычислить корень',
@@ -118,10 +125,10 @@
                         ch: '联系表'
                     },
                     modal_from_text: {
-                        ru: 'текст',
-                        en: 'text',
-                        es: 'text es',
-                        ch: '文本'
+                        ru: 'Опишите вашу проблему',
+                        en: 'Describe your problem',
+                        es: 'Describe tu problema',
+                        ch: '描述你的问题'
                     }
                 },
             }
@@ -131,7 +138,11 @@
                 let tmp = this.sqrt_func(this.text);
                 if (tmp !== 'error') {
                     // print result
-                    this.output = tmp.toString();
+                    if (tmp != 0) {
+                        this.output = '±' + tmp.toString();
+                    } else {
+                        this.output = tmp.toString()
+                    }
                 } else {
                     // tmp === 'error'
                     // print error message
@@ -139,14 +150,17 @@
                 }
             },
             handle_ok() {
-                this.$api.post("/error", {text: this.send_error})
-                    .then(({data}) => {
-                        this.$snotify.success('Complete!')
-                    })
-                    .catch(e => {
-                        this.$snotify.error(`Error status ${e.response.status}`);
-                    });
-                this.send_error = '';
+                if (this.send_error) {
+                    // Отправка текста на /api/v1/error, где она хранится и предоставляется по GET запросу /api/v1/error;
+                    this.$api.post("/error", {text: this.send_error})
+                        .then(({data}) => {
+                            this.$snotify.success('Complete!')
+                        })
+                        .catch(e => {
+                            this.$snotify.error(`Error status ${e.response.status}`);
+                        });
+                    this.send_error = '';
+                }
             },
             sqrt_func(number) {
                 // валидация пустых строк;
@@ -154,8 +168,8 @@
                     return 'error';
                 }
                 // валидация sin cos tg ctg;
-                if (number.startsWith('cos') || number.startsWith('sin') ||
-                    number.startsWith('tg') || number.startsWith('ctg')
+                if (number.startsWith('cos(') || number.startsWith('sin(') ||
+                    number.startsWith('tg(') || number.startsWith('ctg(')
                 ) {
                     // переопределение дефолтных функций для tg и ctg;
                     Math.tg = Math.tan;
@@ -163,7 +177,7 @@
                         return 1 / Math.tan(value)
                     };
                     // парсинг и нахождение числового значения тригонометрических параметров;
-                    number = Math[number.match(/^(cos|sin|tg|ctg)/g)[0]](number.match(/[-]{0,1}[\d]*[\.]{0,1}[\d]+/g)[0]);
+                    number = Math[number.match(/^(cos|sin|tg|ctg)/g) || NaN](number.match(/[-]{0,1}[\d]*[\.]{0,1}[\d]+/g) || NaN);
                 }
                 // валидация 0;
                 if (number == 0) {
@@ -171,10 +185,10 @@
                 }
                 // валидация отрицательных чисел;
                 if (number < 0) {
-                    return '±' + Math.sqrt(Math.abs(number)) + 'i' || 'error';
+                    return Math.sqrt(Math.abs(number)) + 'i' || 'error';
                 }
                 // валидация положительных чисел;
-                return '±' + Math.sqrt(number) || 'error';
+                return Math.sqrt(number) || 'error';
             },
         }
         ,
