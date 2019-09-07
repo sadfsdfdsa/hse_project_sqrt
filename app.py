@@ -26,7 +26,7 @@ def page_not_found(e):
 def frontend_post_errors():
     if len(errors) >= 1000:
         del errors[0]
-    errors.append([request.json, datetime.today().strftime('%Y-%m-%d-%H:%M:%S')])
+    errors.append([request.json, datetime.datetime.today().strftime('%Y-%m-%d-%H:%M:%S')])
     return jsonify(result='success')
 
 
